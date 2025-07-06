@@ -20,8 +20,31 @@
     </div>
   </div>
 
+  <!-- Error Overlay -->
+  <div *ngIf="errorMessage" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div class="flex flex-col items-center gap-4 p-8 bg-white rounded-lg shadow-lg">
+      <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25" />
+        <path fill="currentColor" class="opacity-75" d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span class="text-lg font-semibold text-red-700">{{ errorMessage }}</span>
+      <button (click)="errorMessage = null" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoading" class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-40">
+    <div class="flex flex-col items-center gap-4 p-8 bg-white rounded-lg shadow-lg">
+      <svg class="animate-spin h-10 w-10 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <span class="text-lg font-semibold text-green-700">Loading chat, please wait...</span>
+    </div>
+  </div>
+
   <!-- Chat Container -->
-  <div class="w-full max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
+  <div *ngIf="!errorMessage" class="w-full max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
     <!-- Chat Header -->
     <div class="bg-green-700 text-white p-4">
       <h2 class="text-lg font-semibold">WhatsApp Chat</h2>

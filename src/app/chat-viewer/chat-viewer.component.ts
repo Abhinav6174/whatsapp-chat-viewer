@@ -4,6 +4,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { DisplayItem, Message, MediaMessage, DaySeparator } from '../models/chat.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule as formsModule } from '@angular/forms';
+import heic2any from 'heic2any';
 
 interface ChatMessage {
   timestamp: string;
@@ -40,48 +41,81 @@ export class ChatViewerComponent implements OnDestroy {
   mediaFileData: { [key: string]: string } = {};
   primaryUser: string = '';
   availableUsers: string[] = [];
+  isLoading = false;
+  errorMessage: string | null = null;
 
   async onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
+    this.isLoading = true;
+    this.errorMessage = null;
 
-    const file = input.files[0];
-    const zip = new JSZip();
-    const zipData = await zip.loadAsync(file);
 
-    this.mediaFiles = {};
-    this.mediaFileTypes = {};
-    this.mediaFileData = {};
-    const mediaFileNames = Object.keys(zipData.files).filter(f => !f.endsWith('.txt') && !zipData.files[f].dir);
-
-    for (const fileName of mediaFileNames) {
-      const fileData = zipData.files[fileName];
-      const arrayBuffer = await fileData.async('arraybuffer');
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
-      this.mediaFileTypes[fileName] = detectedType;
-
-      // For images/audio/video/pdf, create data URL
-      if (detectedType.startsWith('image/') || detectedType.startsWith('audio/') || detectedType.startsWith('video/') || detectedType === 'application/pdf') {
-        const base64 = await fileData.async('base64');
-        this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
-      } else if (detectedType === 'text/vcard' || fileName.toLowerCase().endsWith('.vcf')) {
-        // For VCF, store as text
-        this.mediaFileData[fileName] = await fileData.async('text');
+    try {
+      const input = event.target as HTMLInputElement;
+      if (!input.files?.length) { this.isLoading = false; return; }
+      const file = input.files[0];
+      const zip = new JSZip();
+      const zipData = await zip.loadAsync(file);
+      this.mediaFiles = {};
+      this.mediaFileTypes = {};
+      this.mediaFileData = {};
+      const mediaFileNames = Object.keys(zipData.files).filter(f => !f.endsWith('.txt') && !zipData.files[f].dir);
+      for (const fileName of mediaFileNames) {
+        const fileData = zipData.files[fileName];
+        const arrayBuffer = await fileData.async('arraybuffer');
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
+        this.mediaFileTypes[fileName] = detectedType;
+        
+        // For HEIC images, convert to JPEG using heic2any
+        if (detectedType === 'image/heic') {
+          try {
+            const blob = new Blob([arrayBuffer], { type: 'image/heic' });
+            const convertedBlob = await heic2any({ blob, toType: 'image/jpeg', quality: 0.92 });
+            // heic2any returns a Blob or an array of Blobs
+            const resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(resultBlob);
+            });
+            this.mediaFiles[fileName] = dataUrl;
+            this.mediaFileTypes[fileName] = 'image/jpeg';
+          } catch (e) {
+            // fallback: store as original HEIC if conversion fails
+            const base64 = await fileData.async('base64');
+            this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+          }
+        } else if (detectedType.startsWith('image/') || detectedType.startsWith('audio/') || detectedType.startsWith('video/') || detectedType === 'application/pdf') {
+          const base64 = await fileData.async('base64');
+          this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+        } else if (detectedType === 'text/vcard' || fileName.toLowerCase().endsWith('.vcf')) {
+          // For VCF, store as text
+          this.mediaFileData[fileName] = await fileData.async('text');
+        } else {
+          // For other files, store as base64 data URL
+          const base64 = await fileData.async('base64');
+          this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+        }
+      }
+      // Process chat text file
+      const chatFile = Object.keys(zipData.files).find(f => f.endsWith('.txt'));
+      if (chatFile) {
+        this.availableUsers = [];
+        this.primaryUser = '';
+        const text = await zipData.file(chatFile)?.async('text');
+        if (text) {
+          this.parseChatText(text);
+        }
       } else {
-        // For other files, store as base64 data URL
-        const base64 = await fileData.async('base64');
-        this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+        this.errorMessage = 'No chat file found in the zip. Please upload a valid WhatsApp chat export.';
+        return;
       }
-    }
-
-    // Process chat text file
-    const chatFile = Object.keys(zipData.files).find(f => f.endsWith('.txt'));
-    if (chatFile) {
-      const text = await zipData.file(chatFile)?.async('text');
-      if (text) {
-        this.parseChatText(text);
-      }
+    } catch (err: any) {
+      this.errorMessage = 'Error loading chats. Please check your file and try again.';
+      console.error('Error loading chat:', err);
+    } finally {
+      this.isLoading = false;
     }
   }
 
