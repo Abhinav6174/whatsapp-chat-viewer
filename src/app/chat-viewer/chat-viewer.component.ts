@@ -9,9 +9,19 @@ interface ChatMessage {
   timestamp: string;
   sender: string;
   message: string;
-  media?: string;
+  media?: string; // data URL for images/audio/video/pdf
   mediaType?: string;
-  mediaData?: ArrayBuffer;
+  mediaData?: string; // for text/VCF, the raw text
+  contactPreview?: {
+    name?: string;
+    phones?: string[];
+    emails?: string[];
+    photoDataUrl?: string;
+    address?: string;
+    birthday?: string;
+    extraFields?: { [key: string]: string };
+    vcfDataUrl?: string;
+  };
   date: string;
 }
 
@@ -27,7 +37,7 @@ export class ChatViewerComponent implements OnDestroy {
   messages: ChatMessage[] = [];
   mediaFiles: { [key: string]: string } = {};
   mediaFileTypes: { [key: string]: string } = {};
-  mediaFileData: { [key: string]: ArrayBuffer } = {};
+  mediaFileData: { [key: string]: string } = {};
   primaryUser: string = '';
   availableUsers: string[] = [];
 
@@ -39,27 +49,29 @@ export class ChatViewerComponent implements OnDestroy {
     const zip = new JSZip();
     const zipData = await zip.loadAsync(file);
 
-    // Extract media files and store them with better indexing
     this.mediaFiles = {};
     this.mediaFileTypes = {};
     this.mediaFileData = {};
     const mediaFileNames = Object.keys(zipData.files).filter(f => !f.endsWith('.txt') && !zipData.files[f].dir);
-    
+
     for (const fileName of mediaFileNames) {
       const fileData = zipData.files[fileName];
-      const blob = await fileData.async('blob');
-      
-      // Detect actual file type from metadata
-      const detectedType = await this.detectFileType(blob);
+      const arrayBuffer = await fileData.async('arraybuffer');
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
       this.mediaFileTypes[fileName] = detectedType;
-      
-      // For PDF files, store the data directly instead of creating blob URL
-      if (detectedType === 'application/pdf') {
-        const arrayBuffer = await fileData.async('arraybuffer');
-        this.mediaFileData[fileName] = arrayBuffer;
+
+      // For images/audio/video/pdf, create data URL
+      if (detectedType.startsWith('image/') || detectedType.startsWith('audio/') || detectedType.startsWith('video/') || detectedType === 'application/pdf') {
+        const base64 = await fileData.async('base64');
+        this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+      } else if (detectedType === 'text/vcard' || fileName.toLowerCase().endsWith('.vcf')) {
+        // For VCF, store as text
+        this.mediaFileData[fileName] = await fileData.async('text');
       } else {
-        // For other files, create blob URL as before
-        this.mediaFiles[fileName] = URL.createObjectURL(blob);
+        // For other files, store as base64 data URL
+        const base64 = await fileData.async('base64');
+        this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
       }
     }
 
@@ -73,37 +85,24 @@ export class ChatViewerComponent implements OnDestroy {
     }
   }
 
-  private async detectFileType(blob: Blob): Promise<string> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const arrayBuffer = e.target?.result as ArrayBuffer;
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        // Check file signatures (magic numbers)
-        if (this.isPNG(uint8Array)) {
-          resolve('image/png');
-        } else if (this.isJPEG(uint8Array)) {
-          resolve('image/jpeg');
-        } else if (this.isGIF(uint8Array)) {
-          resolve('image/gif');
-        } else if (this.isWebP(uint8Array)) {
-          resolve('image/webp');
-        } else if (this.isPDF(uint8Array)) {
-          resolve('application/pdf');
-        } else if (this.isMP4(uint8Array)) {
-          resolve('video/mp4');
-        } else if (this.isMP3(uint8Array)) {
-          resolve('audio/mpeg');
-        } else if (this.isOPUS(uint8Array)) {
-          resolve('audio/opus');
-        } else {
-          // Fallback to blob type or default
-          resolve(blob.type || 'application/octet-stream');
-        }
-      };
-      reader.readAsArrayBuffer(blob);
-    });
+  private async detectFileTypeFromBytes(bytes: Uint8Array, fileName: string): Promise<string> {
+    // File signature detection for common formats
+    if (this.isPNG(bytes)) return 'image/png';
+    if (this.isJPEG(bytes)) return 'image/jpeg';
+    if (this.isGIF(bytes)) return 'image/gif';
+    if (this.isWebP(bytes)) return 'image/webp';
+    if (this.isBMP(bytes)) return 'image/bmp';
+    if (this.isTIFF(bytes)) return 'image/tiff';
+    if (this.isSVG(bytes)) return 'image/svg+xml';
+    if (this.isHEIC(bytes)) return 'image/heic';
+    if (this.isHEIF(bytes)) return 'image/heif';
+    if (this.isPDF(bytes)) return 'application/pdf';
+    if (this.isMP4(bytes)) return 'video/mp4';
+    if (this.isMP3(bytes)) return 'audio/mpeg';
+    if (this.isOPUS(bytes)) return 'audio/opus';
+    if (this.isVCF(bytes) || fileName.toLowerCase().endsWith('.vcf')) return 'text/vcard';
+    // fallback to extension
+    return this.getMediaType(fileName);
   }
 
   private isPNG(bytes: Uint8Array): boolean {
@@ -149,6 +148,44 @@ export class ChatViewerComponent implements OnDestroy {
     // OPUS files typically start with "OggS" (Ogg container)
     return bytes.length >= 4 && 
            bytes[0] === 0x4F && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53;
+  }
+
+  private isBMP(bytes: Uint8Array): boolean {
+    return bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4D;
+  }
+
+  private isTIFF(bytes: Uint8Array): boolean {
+    return bytes.length >= 4 && ((bytes[0] === 0x49 && bytes[1] === 0x49 && bytes[2] === 0x2A && bytes[3] === 0x00) || (bytes[0] === 0x4D && bytes[1] === 0x4D && bytes[2] === 0x00 && bytes[3] === 0x2A));
+  }
+
+  private isSVG(bytes: Uint8Array): boolean {
+    // SVG is XML text, so not reliable by signature, but check for <svg
+    const text = new TextDecoder().decode(bytes.slice(0, 100));
+    return text.includes('<svg');
+  }
+
+  private isHEIC(bytes: Uint8Array): boolean {
+    // HEIC/HEIF: ftypheic or ftypheix or ftyphevc or ftypmif1
+    return bytes.length >= 12 && (
+      (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) &&
+      (
+        (bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x69 && bytes[11] === 0x63) ||
+        (bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x69 && bytes[11] === 0x78) ||
+        (bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x76 && bytes[11] === 0x63) ||
+        (bytes[8] === 0x6D && bytes[9] === 0x69 && bytes[10] === 0x66 && bytes[11] === 0x31)
+      )
+    );
+  }
+
+  private isHEIF(bytes: Uint8Array): boolean {
+    // ftypheif
+    return bytes.length >= 12 && (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70 && bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x69 && bytes[11] === 0x66);
+  }
+
+  private isVCF(bytes: Uint8Array): boolean {
+    // VCF is text, check for BEGIN:VCARD
+    const text = new TextDecoder().decode(bytes.slice(0, 100));
+    return text.includes('BEGIN:VCARD');
   }
 
   onPrimaryUserChange(event: Event) {
@@ -266,7 +303,17 @@ export class ChatViewerComponent implements OnDestroy {
         // Handle different message types
         let media: string | undefined;
         let mediaType: string | undefined;
-        let mediaData: ArrayBuffer | undefined;
+        let mediaData: string | undefined;
+        let contactPreview: {
+          name?: string;
+          phones?: string[];
+          emails?: string[];
+          photoDataUrl?: string;
+          address?: string;
+          birthday?: string;
+          extraFields?: { [key: string]: string };
+          vcfDataUrl?: string;
+        } | undefined;
         let processedMessage = message || sender; // For system messages, message is in sender position
 
         if (isSystemMessage) {
@@ -336,25 +383,20 @@ export class ChatViewerComponent implements OnDestroy {
             });
             
             if (mediaFileName) {
-              // Use detected file type from metadata if available, but prioritize filename-based detection for OPUS
               const detectedType = this.mediaFileTypes[mediaFileName];
-              if (detectedType && detectedType !== 'application/octet-stream') {
-                mediaType = detectedType;
+              mediaType = detectedType;
+              if (mediaType && mediaType.startsWith('image/')) {
+                media = this.mediaFiles[mediaFileName];
+              } else if (mediaType && (mediaType.startsWith('audio/') || mediaType.startsWith('video/'))) {
+                media = this.mediaFiles[mediaFileName];
+              } else if (mediaType === 'application/pdf') {
+                media = this.mediaFiles[mediaFileName];
+              } else if (mediaType === 'text/vcard') {
+                mediaData = this.mediaFileData[mediaFileName];
+                contactPreview = this.parseVCF(mediaData);
+                contactPreview.vcfDataUrl = this.mediaFiles[mediaFileName];
               } else {
-                mediaType = this.getMediaType(mediaFileName);
-              }
-              
-              // Handle PDF files differently
-              if (mediaType === 'application/pdf') {
-                // For PDF files, store the data directly
-                if (this.mediaFileData[mediaFileName]) {
-                  mediaData = this.mediaFileData[mediaFileName];
-                }
-              } else {
-                // For other files, use the blob URL
-                if (this.mediaFiles[mediaFileName]) {
-                  media = this.mediaFiles[mediaFileName];
-                }
+                media = this.mediaFiles[mediaFileName];
               }
             } else {
               // Fallback to filename-based detection
@@ -369,6 +411,7 @@ export class ChatViewerComponent implements OnDestroy {
             media,
             mediaType,
             mediaData,
+            contactPreview,
             date: formattedDate
           };
         }
@@ -390,14 +433,14 @@ export class ChatViewerComponent implements OnDestroy {
     }
   }
 
-  downloadPDF(pdfData: ArrayBuffer | undefined, fileName: string): void {
+  downloadPDF(pdfData: string | undefined, fileName: string): void {
     if (!pdfData) return;
     
     // Extract filename from the message text
     const cleanFileName = fileName.replace('📎 ', '').replace('.pdf', '') + '.pdf';
     
     // Create blob and download
-    const blob = new Blob([pdfData], { type: 'application/pdf' });
+    const blob = new Blob([Buffer.from(pdfData, 'base64')], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -408,11 +451,11 @@ export class ChatViewerComponent implements OnDestroy {
     URL.revokeObjectURL(url);
   }
 
-  previewPDF(pdfData: ArrayBuffer | undefined): void {
+  previewPDF(pdfData: string | undefined): void {
     if (!pdfData) return;
     
     // Create blob and open in new tab
-    const blob = new Blob([pdfData], { type: 'application/pdf' });
+    const blob = new Blob([Buffer.from(pdfData, 'base64')], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   }
@@ -435,11 +478,9 @@ export class ChatViewerComponent implements OnDestroy {
   }
 
   getMediaType(fileName: string): string {
-    // First check if we have detected the actual file type from metadata
     if (this.mediaFileTypes[fileName]) {
       return this.mediaFileTypes[fileName];
     }
-    
     const ext = fileName.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'jpg':
@@ -447,6 +488,12 @@ export class ChatViewerComponent implements OnDestroy {
       case 'png':
       case 'gif':
       case 'webp':
+      case 'bmp':
+      case 'tiff':
+      case 'tif':
+      case 'svg':
+      case 'heic':
+      case 'heif':
         return 'image/' + ext;
       case 'mp4':
       case 'mov':
@@ -464,10 +511,11 @@ export class ChatViewerComponent implements OnDestroy {
       case 'wav':
       case 'm4a':
         return 'audio/' + ext;
+      case 'vcf':
+        return 'text/vcard';
       case 'txt':
         return 'text/plain';
       default:
-        // Handle files without extension or unknown extensions
         if (fileName.toLowerCase().includes('doc-')) {
           return 'application/pdf';
         }
@@ -476,5 +524,104 @@ export class ChatViewerComponent implements OnDestroy {
         }
         return 'application/octet-stream';
     }
+  }
+
+  private parseVCF(vcfText: string): {
+    name?: string;
+    phones?: string[];
+    emails?: string[];
+    photoDataUrl?: string;
+    address?: string;
+    birthday?: string;
+    extraFields?: { [key: string]: string };
+    vcfDataUrl?: string;
+  } {
+    const lines = vcfText.split(/\r?\n/);
+    let name = '', photoDataUrl = '', address = '', birthday = '';
+    const phones: string[] = [], emails: string[] = [], extraFields: { [key: string]: string } = {};
+    let photoBase64 = '', photoType = '';
+    for (const line of lines) {
+      if (line.startsWith('FN:')) name = line.substring(3).trim();
+      else if (line.startsWith('N:') && !name) name = line.substring(2).trim();
+      else if (line.match(/^(TEL|item\d+\.TEL)/)) {
+        const match = line.match(/:(.+)$/);
+        if (match) phones.push(match[1].trim());
+      } else if (line.match(/^(EMAIL|item\d+\.EMAIL)/)) {
+        const match = line.match(/:(.+)$/);
+        if (match) emails.push(match[1].trim());
+      } else if (line.startsWith('PHOTO;BASE64:')) {
+        photoBase64 = line.replace('PHOTO;BASE64:', '').trim();
+        photoType = 'jpeg';
+      } else if (line.startsWith('PHOTO;ENCODING=b;TYPE=')) {
+        // e.g. PHOTO;ENCODING=b;TYPE=JPEG:
+        const typeMatch = line.match(/TYPE=([A-Z0-9]+)/i);
+        photoType = typeMatch ? typeMatch[1].toLowerCase() : 'jpeg';
+        photoBase64 = line.split(':')[1]?.trim() || '';
+      } else if (line.startsWith('item') && line.includes('.ADR')) {
+        address = line.split(':')[1]?.trim() || '';
+      } else if (line.startsWith('ADR')) {
+        address = line.split(':')[1]?.trim() || '';
+      } else if (line.startsWith('BDAY')) {
+        birthday = line.split(':')[1]?.trim() || '';
+      } else if (line && !line.startsWith('BEGIN:VCARD') && !line.startsWith('END:VCARD') && !line.startsWith('VERSION:')) {
+        // Store any other fields
+        const idx = line.indexOf(':');
+        if (idx > 0) {
+          const key = line.substring(0, idx);
+          const value = line.substring(idx + 1).trim();
+          if (!['FN', 'N', 'TEL', 'EMAIL', 'PHOTO', 'ADR', 'BDAY'].some(f => key.includes(f))) {
+            extraFields[key] = value;
+          }
+        }
+      }
+    }
+    if (photoBase64) {
+      photoDataUrl = `data:image/${photoType};base64,${photoBase64}`;
+    }
+    return {
+      name,
+      phones,
+      emails,
+      photoDataUrl,
+      address,
+      birthday,
+      extraFields
+    };
+  }
+
+  previewFile(dataUrl: string | undefined, mediaType: string | undefined): void {
+    if (!dataUrl) return;
+    window.open(dataUrl, '_blank');
+  }
+
+  downloadFile(dataUrl: string | undefined, fileName: string, mediaType: string | undefined): void {
+    if (!dataUrl) return;
+    // Ensure fileName has an extension
+    let ext = '';
+    if (mediaType) {
+      if (mediaType === 'application/pdf') ext = '.pdf';
+      else if (mediaType === 'text/vcard') ext = '.vcf';
+      else if (mediaType.startsWith('audio/')) ext = '.mp3';
+      else if (mediaType.startsWith('video/')) ext = '.mp4';
+      else if (mediaType.startsWith('image/')) ext = '.png';
+      else if (mediaType.includes('excel')) ext = '.xlsx';
+      else if (mediaType.includes('word')) ext = '.docx';
+      else if (mediaType.includes('sql')) ext = '.sql';
+      else if (mediaType.includes('zip')) ext = '.zip';
+      else if (mediaType.includes('csv')) ext = '.csv';
+      else if (mediaType.includes('plain')) ext = '.txt';
+    }
+    let cleanFileName = fileName;
+    if (ext && !fileName.endsWith(ext)) cleanFileName += ext;
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = cleanFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  public objectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
   }
 }

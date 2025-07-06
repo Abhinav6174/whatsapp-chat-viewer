@@ -11,7 +11,7 @@
       <label class="block text-sm font-medium text-gray-700 mb-1">Select Primary User</label>
       <select 
         [value]="primaryUser" 
-        (change)="onPrimaryUserChange($event)"
+        (click)="onPrimaryUserChange($event)"
         class="w-full p-2 border rounded bg-white"
         [disabled]="availableUsers.length === 0">
         <option value="" disabled>Select a user...</option>
@@ -21,15 +21,15 @@
   </div>
 
   <!-- Chat Container -->
-  <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
+  <div class="w-full max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
     <!-- Chat Header -->
-    <div class="bg-green-500 text-white p-4">
+    <div class="bg-green-700 text-white p-4">
       <h2 class="text-lg font-semibold">WhatsApp Chat</h2>
       <p class="text-sm opacity-90" *ngIf="primaryUser">Viewing as: {{ primaryUser }}</p>
     </div>
     
     <!-- Messages Container -->
-    <div class="h-[600px] overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-50">
+    <div class="h-[600px] overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-100">
       <div *ngFor="let message of messages; let i = index">
         <!-- Date Separator -->
         <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
@@ -46,21 +46,17 @@
         <!-- Regular Messages -->
         <div *ngIf="message.sender !== 'System'" 
              class="flex {{ isPrimaryUser(message.sender) ? 'justify-end' : 'justify-start' }}">
-          <div class="max-w-[70%] flex {{ isPrimaryUser(message.sender) ? 'flex-row-reverse' : 'flex-row' }} items-end gap-2">
+          <div class="max-w-[70%] flex {{ isPrimaryUser(message.sender) ? 'flex-row-reverse' : 'flex-row' }} items-start gap-2">
             <!-- Avatar -->
-            <div class="w-8 h-8 rounded-full flex-shrink-0 {{ isPrimaryUser(message.sender) ? 'bg-green-500' : 'bg-gray-400' }} flex items-center justify-center text-white text-xs font-semibold">
+            <div class="w-8 h-8 rounded-full flex-shrink-0 {{ isPrimaryUser(message.sender) ? 'bg-green-700' : 'bg-gray-400' }} flex items-center justify-center text-white text-xs font-semibold">
               {{ message.sender.charAt(0).toUpperCase() }}
             </div>
             
             <!-- Message Bubble -->
             <div class="flex flex-col {{ isPrimaryUser(message.sender) ? 'items-end' : 'items-start' }}">
-              <!-- Sender Name (only for other users) -->
-              <div *ngIf="!isPrimaryUser(message.sender)" class="text-xs text-gray-500 mb-1 ml-1">
-                {{ message.sender }}
-              </div>
-              
-              <!-- Message Content -->
-              <div class="p-3 rounded-2xl {{ isPrimaryUser(message.sender) ? 'bg-green-500 text-white' : 'bg-white text-gray-800' }} shadow-sm">
+              <div class="px-3 py-1 rounded-lg {{ isPrimaryUser(message.sender) ? 'bg-green-700 text-white' : 'bg-white text-gray-800' }} shadow-sm flex flex-col min-w-[80px]">
+                <!-- Sender Name (top of bubble, only for other users) -->
+                <span *ngIf="!isPrimaryUser(message.sender)" class="text-xs font-semibold text-gray-500 mb-1">{{ message.sender }}</span>
                 <!-- Media Content -->
                 <div *ngIf="message.media && message.mediaType?.startsWith('image/')" class="mb-2">
                   <img 
@@ -81,7 +77,7 @@
                       <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
                       </svg>
-                      <span class="font-medium">PDF Document</span>
+                      <span class="font-medium text-gray-600">PDF Document</span>
                     </div>
                     <div class="bg-white p-3 rounded border">
                       <div class="flex items-center justify-between">
@@ -110,14 +106,84 @@
                   class="mb-2">
                   <a [href]="message.media" target="_blank" class="text-blue-500 underline">Download {{ message.mediaType }}</a>
                 </div>
-                
+                <!-- Contact Card Preview (for VCF) -->
+                <div *ngIf="message.contactPreview" class="mb-2 bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
+                  <div class="flex flex-col items-center mb-2">
+                    <img *ngIf="message.contactPreview?.photoDataUrl" [src]="message.contactPreview.photoDataUrl" class="w-16 h-16 rounded-full object-cover border border-gray-300 mb-2" alt="Contact Photo" />
+                    <svg *ngIf="!message.contactPreview?.photoDataUrl" class="w-16 h-16 rounded-full bg-gray-200 text-gray-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4"/></svg>
+                    <span class="text-lg font-bold text-gray-800">{{ message.contactPreview.name || 'Contact' }}</span>
+                  </div>
+                  <div *ngIf="message.contactPreview?.phones?.length" class="flex items-center gap-2 text-sm text-gray-700">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2h2.09a2 2 0 012 1.72c.13.81.36 1.6.7 2.34a2 2 0 01-.45 2.11l-.27.27a16 16 0 006.29 6.29l.27-.27a2 2 0 012.11-.45c.74.34 1.53.57 2.34.7A2 2 0 0122 16.92z"/></svg>
+                    <span>{{ message.contactPreview.phones?.[0]! }}</span>
+                  </div>
+                  <div *ngIf="message.contactPreview?.emails?.length" class="flex items-center gap-2 text-sm text-gray-700">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+                    <span>{{ message.contactPreview.emails?.[0] }}</span>
+                  </div>
+                  <details *ngIf="(message.contactPreview?.phones?.length! > 1) || (message.contactPreview?.emails?.length! > 1) || message.contactPreview?.address || message.contactPreview?.birthday || (message.contactPreview?.extraFields && (objectKeys(message.contactPreview?.extraFields).length > 0))" class="mt-2">
+                    <summary class="cursor-pointer text-xs text-gray-500">Show more</summary>
+                    <div class="flex flex-col gap-1 mt-1">
+                      <div *ngIf="message.contactPreview?.phones?.length! > 1">
+                        <div *ngFor="let phone of message.contactPreview?.phones; let i = index">
+                          <div *ngIf="i > 0 && message.contactPreview?.phones?.[i]">
+                            <span class="text-xs text-gray-600 font-semibold">Phone:</span>
+                            <span class="text-xs text-gray-700">{{ message.contactPreview.phones?.[i] }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div *ngIf="message.contactPreview?.emails?.length! > 1">
+                        <div *ngFor="let email of message.contactPreview?.emails; let i = index">
+                          <div *ngIf="i > 0 && message.contactPreview?.emails?.[i]">
+                            <span class="text-xs text-gray-600 font-semibold">Email:</span>
+                            <span class="text-xs text-gray-700">{{ message.contactPreview.emails?.[i] }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div *ngIf="message.contactPreview?.address" class="flex items-center gap-2 text-xs text-gray-700">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        <span>{{ message.contactPreview.address }}</span>
+                      </div>
+                      <div *ngIf="message.contactPreview?.birthday" class="flex items-center gap-2 text-xs text-gray-700">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        <span>{{ message.contactPreview.birthday }}</span>
+                      </div>
+                      <div *ngIf="message.contactPreview?.extraFields && (objectKeys(message.contactPreview?.extraFields).length > 0)">
+                        <div *ngFor="let key of objectKeys(message.contactPreview?.extraFields)">
+                          <span class="text-xs text-gray-600 font-semibold">{{ key }}:</span>
+                          <span class="text-xs text-gray-700">{{ message.contactPreview.extraFields?.[key] }}</span>
+                        </div>
+                      </div>
+                      <div class="flex gap-2 mt-2">
+                        <button (click)="previewFile(message.media, 'text/vcard')" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">Preview</button>
+                        <button (click)="downloadFile(message.media, message.contactPreview.name || 'contact', 'text/vcard')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download</button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <!-- File Card for non-image files -->
+                <div *ngIf="message.media && !message.mediaType?.startsWith('image/')" class="mb-2 bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
+                  <div class="flex items-center gap-2 mb-1">
+                    <ng-container [ngSwitch]="true">
+                      <svg *ngSwitchCase="message.mediaType === 'application/pdf'" class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8M8 10h8M8 14h6"/></svg>
+                      <svg *ngSwitchCase="message.mediaType === 'text/vcard'" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4"/></svg>
+                      <svg *ngSwitchCase="message.mediaType?.startsWith('audio/')" class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-2v13"/><circle cx="6" cy="18" r="3"/></svg>
+                      <svg *ngSwitchCase="message.mediaType?.startsWith('video/')" class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14"/></svg>
+                      <svg *ngSwitchDefault class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8M8 10h8M8 14h6"/></svg>
+                    </ng-container>
+                    <span class="text-base font-semibold text-gray-800 truncate max-w-[180px]">{{ getPDFFileName(message.message) }}</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="previewFile(message.media, message.mediaType)" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">Preview</button>
+                    <button (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download</button>
+                  </div>
+                </div>
                 <!-- Message Text -->
-                <div class="text-sm whitespace-pre-wrap">{{ message.message }}</div>
-              </div>
-              
-              <!-- Timestamp -->
-              <div class="text-xs text-gray-500 mt-1 {{ isPrimaryUser(message.sender) ? 'mr-1' : 'ml-1' }}">
-                {{ message.timestamp }}
+                <div class="text-sm whitespace-pre-wrap" style="word-break: break-word;">{{ message.message }}</div>
+                <!-- Bubble Footer: Timestamp (bottom right) -->
+                <div class="flex justify-end">
+                  <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
+                </div>
               </div>
             </div>
           </div>
