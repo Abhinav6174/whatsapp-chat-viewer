@@ -44,6 +44,30 @@ export class ChatViewerComponent implements OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
 
+  // Responsive sidebar state
+  sidebarOpen: boolean = false;
+  isDesktop: boolean = false;
+  private resizeListener: (() => void) | null = null;
+
+  constructor() {
+    this.updateIsDesktop();
+    this.sidebarOpen = this.isDesktop; // open sidebar by default on desktop
+    this.resizeListener = () => {
+      const wasDesktop = this.isDesktop;
+      this.updateIsDesktop();
+      if (this.isDesktop && !wasDesktop) {
+        this.sidebarOpen = true;
+      } else if (!this.isDesktop && wasDesktop) {
+        this.sidebarOpen = false;
+      }
+    };
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  private updateIsDesktop() {
+    this.isDesktop = window.matchMedia('(min-width: 768px)').matches;
+  }
+
   async onFileSelected(event: Event) {
     this.isLoading = true;
     this.errorMessage = null;
@@ -421,6 +445,14 @@ export class ChatViewerComponent implements OnDestroy {
               mediaType = detectedType;
               if (mediaType && mediaType.startsWith('image/')) {
                 media = this.mediaFiles[mediaFileName];
+                // If the message is exactly the file attachment (with or without the icon), don't show text
+                const onlyFileAttachment =
+                  actualMessage.trim() === `${fileName} (file attached)` ||
+                  actualMessage.trim() === `${fileName}` ||
+                  actualMessage.trim() === `📎 ${fileName}`;
+                if (onlyFileAttachment) {
+                  processedMessage = '';
+                }
               } else if (mediaType && (mediaType.startsWith('audio/') || mediaType.startsWith('video/'))) {
                 media = this.mediaFiles[mediaFileName];
               } else if (mediaType === 'application/pdf') {
@@ -505,6 +537,9 @@ export class ChatViewerComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
     // Clean up blob URLs to prevent memory leaks
     Object.values(this.mediaFiles).forEach(url => {
       URL.revokeObjectURL(url);
