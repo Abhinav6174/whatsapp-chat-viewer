@@ -63,7 +63,11 @@
               <div class="p-3 rounded-2xl {{ isPrimaryUser(message.sender) ? 'bg-green-500 text-white' : 'bg-white text-gray-800' }} shadow-sm">
                 <!-- Media Content -->
                 <div *ngIf="message.media && message.mediaType?.startsWith('image/')" class="mb-2">
-                  <img [src]="message.media" class="max-w-[200px] rounded-lg" alt="media" />
+                  <img 
+                    [src]="message.media" 
+                    [class]="message.mediaType === 'image/webp' ? 'max-w-[150px] rounded-lg shadow-sm' : 'max-w-[200px] rounded-lg'" 
+                    [alt]="message.mediaType === 'image/webp' ? 'sticker' : 'media'"
+                    [title]="message.mediaType === 'image/webp' ? 'Sticker: ' + getStickerName(message.message) : ''" />
                 </div>
                 <div *ngIf="message.media && message.mediaType?.startsWith('video/')" class="mb-2">
                   <video [src]="message.media" controls class="max-w-[200px] rounded-lg"></video>

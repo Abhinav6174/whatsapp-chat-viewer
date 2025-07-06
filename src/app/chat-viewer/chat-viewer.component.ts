@@ -87,6 +87,8 @@ export class ChatViewerComponent implements OnDestroy {
           resolve('image/jpeg');
         } else if (this.isGIF(uint8Array)) {
           resolve('image/gif');
+        } else if (this.isWebP(uint8Array)) {
+          resolve('image/webp');
         } else if (this.isPDF(uint8Array)) {
           resolve('application/pdf');
         } else if (this.isMP4(uint8Array)) {
@@ -118,6 +120,12 @@ export class ChatViewerComponent implements OnDestroy {
     return bytes.length >= 6 && 
            bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 &&
            bytes[3] === 0x38 && (bytes[4] === 0x37 || bytes[4] === 0x39) && bytes[5] === 0x61;
+  }
+
+  private isWebP(bytes: Uint8Array): boolean {
+    return bytes.length >= 12 && 
+           bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+           bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
   }
 
   private isPDF(bytes: Uint8Array): boolean {
@@ -288,7 +296,13 @@ export class ChatViewerComponent implements OnDestroy {
           // Handle file attachment messages
           if (actualMessage.includes('(file attached)')) {
             const fileName = actualMessage.replace('(file attached)', '').trim();
-            processedMessage = `📎 ${fileName}`;
+            
+            // Check if it's a WebP file (sticker)
+            if (fileName.toLowerCase().includes('.webp')) {
+              processedMessage = `😀 ${fileName.replace('.webp', '').replace('(file attached)', '').trim()}`;
+            } else {
+              processedMessage = `📎 ${fileName}`;
+            }
             
             // Try to find the actual file in mediaFiles or mediaFileData
             const allFileNames = [...Object.keys(this.mediaFiles), ...Object.keys(this.mediaFileData)];
@@ -307,6 +321,14 @@ export class ChatViewerComponent implements OnDestroy {
                 // Extract the base name without extension for better matching
                 const baseName = fileNameLower.replace('.opus', '').replace('(file attached)', '').trim();
                 const fileBaseName = fLower.replace('.opus', '');
+                if (fileBaseName.includes(baseName) || baseName.includes(fileBaseName)) return true;
+              }
+              
+              // For WebP files (stickers), also check if the filename contains the pattern
+              if (fileNameLower.includes('.webp') || fLower.includes('.webp')) {
+                // Extract the base name without extension for better matching
+                const baseName = fileNameLower.replace('.webp', '').replace('(file attached)', '').trim();
+                const fileBaseName = fLower.replace('.webp', '');
                 if (fileBaseName.includes(baseName) || baseName.includes(fileBaseName)) return true;
               }
               
@@ -398,6 +420,11 @@ export class ChatViewerComponent implements OnDestroy {
   getPDFFileName(messageText: string): string {
     // Extract filename from the message text
     return messageText.replace('📎 ', '');
+  }
+
+  getStickerName(messageText: string): string {
+    // Extract sticker name from the message text
+    return messageText.replace('😀 ', '');
   }
 
   ngOnDestroy(): void {
