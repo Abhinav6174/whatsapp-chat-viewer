@@ -68,8 +68,41 @@
                 <div *ngIf="message.media && message.mediaType?.startsWith('video/')" class="mb-2">
                   <video [src]="message.media" controls class="max-w-[200px] rounded-lg"></video>
                 </div>
+                <div *ngIf="message.media && message.mediaType?.startsWith('audio/')" class="mb-2">
+                  <audio [src]="message.media" controls class="w-full"></audio>
+                </div>
+                <div *ngIf="message.mediaData && message.mediaType === 'application/pdf'" class="mb-2">
+                  <div class="bg-gray-100 p-3 rounded-lg border">
+                    <div class="flex items-center gap-2 mb-2">
+                      <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                      </svg>
+                      <span class="font-medium">PDF Document</span>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                      <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                          <div class="text-sm font-medium text-gray-800 mb-1">{{ getPDFFileName(message.message) }}</div>
+                          <div class="text-xs text-gray-500">PDF Document</div>
+                        </div>
+                        <div class="flex gap-2">
+                          <button 
+                            (click)="previewPDF(message.mediaData)"
+                            class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">
+                            Preview
+                          </button>
+                          <button 
+                            (click)="downloadPDF(message.mediaData, message.message)"
+                            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">
+                            Download
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div
-                  *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/')"
+                  *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/') && !message.mediaType?.startsWith('audio/') && message.mediaType !== 'application/pdf'"
                   class="mb-2">
                   <a [href]="message.media" target="_blank" class="text-blue-500 underline">Download {{ message.mediaType }}</a>
                 </div>
