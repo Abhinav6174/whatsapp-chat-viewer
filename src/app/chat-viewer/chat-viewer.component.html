@@ -1,0 +1,91 @@
+<div class="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+  <h1 class="text-2xl font-bold mb-4">WhatsApp Chat Viewer</h1>
+  
+  <!-- File Upload and User Selection -->
+  <div class="w-full max-w-2xl mb-4 flex gap-4 items-center">
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Upload Chat Export (.zip)</label>
+      <input type="file" accept=".zip" (change)="onFileSelected($event)" class="w-full p-2 border rounded bg-white" />
+    </div>
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Select Primary User</label>
+      <select 
+        [value]="primaryUser" 
+        (change)="onPrimaryUserChange($event)"
+        class="w-full p-2 border rounded bg-white"
+        [disabled]="availableUsers.length === 0">
+        <option value="" disabled>Select a user...</option>
+        <option *ngFor="let user of availableUsers" [value]="user">{{ user }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
+    <!-- Chat Header -->
+    <div class="bg-green-500 text-white p-4">
+      <h2 class="text-lg font-semibold">WhatsApp Chat</h2>
+      <p class="text-sm opacity-90" *ngIf="primaryUser">Viewing as: {{ primaryUser }}</p>
+    </div>
+    
+    <!-- Messages Container -->
+    <div class="h-[600px] overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-50">
+      <div *ngFor="let message of messages; let i = index">
+        <!-- Date Separator -->
+        <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
+          <span class="bg-gray-200 px-3 py-1 rounded-full">{{ message.date }}</span>
+        </div>
+        
+        <!-- System Messages -->
+        <div *ngIf="message.sender === 'System'" class="text-center my-2">
+          <div class="inline-block bg-gray-200 text-gray-600 text-xs px-4 py-2 rounded-full max-w-[80%]">
+            {{ message.message }}
+          </div>
+        </div>
+        
+        <!-- Regular Messages -->
+        <div *ngIf="message.sender !== 'System'" 
+             class="flex {{ isPrimaryUser(message.sender) ? 'justify-end' : 'justify-start' }}">
+          <div class="max-w-[70%] flex {{ isPrimaryUser(message.sender) ? 'flex-row-reverse' : 'flex-row' }} items-end gap-2">
+            <!-- Avatar -->
+            <div class="w-8 h-8 rounded-full flex-shrink-0 {{ isPrimaryUser(message.sender) ? 'bg-green-500' : 'bg-gray-400' }} flex items-center justify-center text-white text-xs font-semibold">
+              {{ message.sender.charAt(0).toUpperCase() }}
+            </div>
+            
+            <!-- Message Bubble -->
+            <div class="flex flex-col {{ isPrimaryUser(message.sender) ? 'items-end' : 'items-start' }}">
+              <!-- Sender Name (only for other users) -->
+              <div *ngIf="!isPrimaryUser(message.sender)" class="text-xs text-gray-500 mb-1 ml-1">
+                {{ message.sender }}
+              </div>
+              
+              <!-- Message Content -->
+              <div class="p-3 rounded-2xl {{ isPrimaryUser(message.sender) ? 'bg-green-500 text-white' : 'bg-white text-gray-800' }} shadow-sm">
+                <!-- Media Content -->
+                <div *ngIf="message.media && message.mediaType?.startsWith('image/')" class="mb-2">
+                  <img [src]="message.media" class="max-w-[200px] rounded-lg" alt="media" />
+                </div>
+                <div *ngIf="message.media && message.mediaType?.startsWith('video/')" class="mb-2">
+                  <video [src]="message.media" controls class="max-w-[200px] rounded-lg"></video>
+                </div>
+                <div
+                  *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/')"
+                  class="mb-2">
+                  <a [href]="message.media" target="_blank" class="text-blue-500 underline">Download {{ message.mediaType }}</a>
+                </div>
+                
+                <!-- Message Text -->
+                <div class="text-sm whitespace-pre-wrap">{{ message.message }}</div>
+              </div>
+              
+              <!-- Timestamp -->
+              <div class="text-xs text-gray-500 mt-1 {{ isPrimaryUser(message.sender) ? 'mr-1' : 'ml-1' }}">
+                {{ message.timestamp }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
