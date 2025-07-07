@@ -47,6 +47,14 @@ export class ChatViewerComponent implements OnDestroy {
   // WhatsApp-style message input
   newMessage: string = '';
 
+  // For group chat: selected chat partner (other than primary user)
+  selectedChatPartner: string = '';
+  chatPartnerDropdownOpen: boolean = false;
+
+  // For group chat: group name editing
+  groupName: string = 'WhatsApp Group';
+  editingGroupName: boolean = false;
+
   // Responsive sidebar state
   sidebarOpen: boolean = false;
   isDesktop: boolean = false;
@@ -500,6 +508,12 @@ export class ChatViewerComponent implements OnDestroy {
     if (this.availableUsers.length > 0 && !this.primaryUser) {
       this.primaryUser = this.availableUsers[0];
     }
+    // Set default selected chat partner for group chats
+    if (this.availableUsers.length > 2) {
+      const firstOther = this.availableUsers.find(u => u !== this.primaryUser);
+      this.selectedChatPartner = firstOther || '';
+      this.groupName = 'WhatsApp Group';
+    }
   }
 
   downloadPDF(pdfData: string | undefined, fileName: string): void {
@@ -712,5 +726,37 @@ export class ChatViewerComponent implements OnDestroy {
       const container = document.querySelector('.h-[600px].overflow-y-auto');
       if (container) container.scrollTop = container.scrollHeight;
     }, 50);
+  }
+
+  getOppositeUser(): string {
+    debugger
+    if (this.availableUsers.length === 2) {
+      return this.availableUsers.find(u => u !== this.primaryUser) || 'Chat';
+    }
+    return 'Chat';
+  }
+
+  onChatPartnerChange(event: Event): void {
+    // Optionally, you can filter messages here if needed
+    // For now, just update the selectedChatPartner
+    const select = event.target as HTMLSelectElement;
+    this.selectedChatPartner = select.value;
+    if (this.availableUsers.length > 0 && !this.primaryUser) {
+      this.primaryUser = this.availableUsers[0];
+    }
+  }
+
+  selectChatPartner(user: string): void {
+    this.selectedChatPartner = user;
+    this.chatPartnerDropdownOpen = false;
+  }
+
+  focusGroupNameInput(input: HTMLInputElement): void {
+    setTimeout(() => input.focus(), 0);
+  }
+
+  startEditingGroupName(input: HTMLInputElement): void {
+    this.editingGroupName = true;
+    this.focusGroupNameInput(input);
   }
 }
