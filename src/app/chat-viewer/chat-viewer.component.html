@@ -59,7 +59,7 @@
     <!-- Chat Window -->
     <div class="flex-1 w-full md:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden relative">
       <!-- Chat Header -->
-      <div class="bg-green-700 text-white px-4 py-1 flex items-center justify-between">
+      <div class="bg-green-700 text-white px-4 py-2 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-green-700 font-bold text-md sm:text-sm">
             <!-- <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@
       </div>
 
       <!-- Messages Container -->
-      <div class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-gray-100 pb-[20px] sm:pb-16 md:pb-[60px]" style="height: 77vh;">
+      <div class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-gray-100 pb-[50px] sm:pb-16 md:pb-[60px] h-chat-sm md:chat-md lg:h-chat-lg">
         <div *ngFor="let message of messages; let i = index">
           <!-- Date Separator -->
           <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
@@ -132,7 +132,7 @@
                            [alt]="message.mediaType === 'image/webp' ? 'sticker' : 'media'"
                            [title]="message.mediaType === 'image/webp' ? 'Sticker: ' + getStickerName(message.message) : ''" />
                       <div class="flex-1 w-full flex flex-col items-center justify-center mt-1">
-                        <div *ngIf="message.message.length > 0 && !message.mediaType?.startsWith('image/')" class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{ message.message }}</div>
+                        <div *ngIf="message.message.length > 0 && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')" class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{ message.message }}</div>
                         <!-- <div class="flex justify-center w-full">
                           <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
                         </div> -->
@@ -143,9 +143,17 @@
                   <div *ngIf="message.media && message.mediaType?.startsWith('video/')" class="mb-2">
                     <video [src]="message.media" controls class="max-w-[200px] rounded-lg"></video>
                   </div>
-                  <div *ngIf="message.media && message.mediaType?.startsWith('audio/')" class="mb-2">
-                    <audio [src]="message.media" controls class="w-full"></audio>
+                  <div *ngIf="message.media && message.mediaType?.startsWith('audio/')"
+                    class="flex items-center justify-between bg-gray-100 border border-gray-300 rounded-lg px-2 mb-2 shadow-sm">
+                    <!-- Audio Player -->
+                    <audio [src]="message.media" controls class="max-w-[100%] h-12 focus:outline-none"></audio>
+                  
+                    <!-- Download Icon -->
+                    <a [href]="message.media" download class="text-blue-600 hover:text-blue-800 transition" title="Download audio">
+                      <i class="fas fa-download text-lg sm:text-md"></i>
+                    </a>
                   </div>
+
                   <div *ngIf="message.mediaData && message.mediaType === 'application/pdf'" class="mb-2">
                     <div class="bg-gray-100 p-3 rounded-lg border">
                       <div class="flex items-center gap-2 mb-2">
@@ -273,7 +281,7 @@
                     </details>
                   </div>
                   <!-- File Card for non-image files -->
-                  <div *ngIf="message.media && !message.mediaType?.startsWith('image/')"
+                  <div *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')"
                     class="mb-2 bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
                     <div class="flex items-center gap-2 mb-1">
                       <ng-container [ngSwitch]="true">
@@ -287,30 +295,38 @@
                           <circle cx="12" cy="8" r="4" />
                           <path d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4" />
                         </svg>
-                        <svg *ngSwitchCase="message.mediaType?.startsWith('audio/')" class="w-6 h-6 text-blue-500"
+                        <!-- <svg *ngSwitchCase="message.mediaType?.startsWith('audio/')" class="w-6 h-6 text-blue-500"
                           fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                           <path d="M9 19V6l12-2v13" />
                           <circle cx="6" cy="18" r="3" />
-                        </svg>
+                        </svg> -->
                         <svg *ngSwitchCase="message.mediaType?.startsWith('video/')" class="w-6 h-6 text-purple-500"
                           fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                           <rect width="20" height="14" x="2" y="5" rx="2" />
                           <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14" />
                         </svg>
-                        <svg *ngSwitchDefault class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
-                          stroke-width="2" viewBox="0 0 24 24">
-                          <rect width="16" height="20" x="4" y="2" rx="2" />
-                          <path d="M8 6h8M8 10h8M8 14h6" />
-                        </svg>
+                        <ng-container *ngIf="!message.mediaType?.startsWith('audio/')">
+                          <svg *ngSwitchDefault class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
+                            <rect width="16" height="20" x="4" y="2" rx="2" />
+                            <path d="M8 6h8M8 10h8M8 14h6" />
+                          </svg>
+                        </ng-container>
                       </ng-container>
-                      <span class="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{{
+                      <span *ngIf="!message.mediaType?.startsWith('audio/')" class="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{{
                         getPDFFileName(message.message) }}</span>
                     </div>
                     <div class="flex gap-2">
                       <button *ngIf="!message.mediaType?.startsWith('audio/')" (click)="previewFile(message.media, message.mediaType)"
                         class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">Preview</button>
-                      <button (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
+                      <button *ngIf="!message.mediaType?.startsWith('audio/')" (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
                         class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download</button>
+                      <!-- Add play/download for audio files -->
+                      <!-- <ng-container *ngIf="message.mediaType?.startsWith('audio/')">
+                        <audio [src]="message.media" controls class="w-full mb-1"></audio>
+                        <button (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
+                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download Audio</button>
+                      </ng-container> -->
                     </div>
                   </div>
                   <!-- Message Text -->

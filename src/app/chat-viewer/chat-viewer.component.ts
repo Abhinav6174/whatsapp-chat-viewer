@@ -98,7 +98,12 @@ export class ChatViewerComponent implements OnDestroy {
         const fileData = zipData.files[fileName];
         const arrayBuffer = await fileData.async('arraybuffer');
         const uint8Array = new Uint8Array(arrayBuffer);
-        const detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
+        // const detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
+        let detectedType = await this.detectFileTypeFromBytes(uint8Array, fileName);
+        // Fix: For OPUS files, use audio/ogg for browser compatibility
+        if (detectedType === 'audio/opus') {
+          detectedType = 'audio/ogg';
+        }
         this.mediaFileTypes[fileName] = detectedType;
         
         // For HEIC images, convert to JPEG using heic2any
@@ -122,8 +127,13 @@ export class ChatViewerComponent implements OnDestroy {
             this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
           }
         } else if (detectedType.startsWith('image/') || detectedType.startsWith('audio/') || detectedType.startsWith('video/') || detectedType === 'application/pdf') {
-          const base64 = await fileData.async('base64');
-          this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+          let base64 = await fileData.async('base64');
+          // Fix: For OPUS files, use audio/ogg in the data URL
+          if (detectedType === 'audio/ogg') {
+            this.mediaFiles[fileName] = `data:audio/ogg;base64,${base64}`;
+          } else {
+            this.mediaFiles[fileName] = `data:${detectedType};base64,${base64}`;
+          }
         } else if (detectedType === 'text/vcard' || fileName.toLowerCase().endsWith('.vcf')) {
           // For VCF, store as text
           this.mediaFileData[fileName] = await fileData.async('text');
