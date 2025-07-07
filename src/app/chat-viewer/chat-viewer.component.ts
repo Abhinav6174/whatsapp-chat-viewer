@@ -417,7 +417,7 @@ export class ChatViewerComponent implements OnDestroy {
             if (fileName.toLowerCase().includes('.webp')) {
               processedMessage = `😀 ${fileName.replace('.webp', '').replace('(file attached)', '').trim()}`;
             } else {
-              processedMessage = ``;
+              processedMessage = `${fileName}`;
             }
             
             // Try to find the actual file in mediaFiles or mediaFileData
@@ -468,6 +468,10 @@ export class ChatViewerComponent implements OnDestroy {
                 }
               } else if (mediaType && (mediaType.startsWith('audio/') || mediaType.startsWith('video/'))) {
                 media = this.mediaFiles[mediaFileName];
+                // Debug: log audio messages
+                if (mediaType.startsWith('audio/')) {
+                  console.log('Audio message:', { fileName: mediaFileName, media, mediaType });
+                }
               } else if (mediaType === 'application/pdf') {
                 media = this.mediaFiles[mediaFileName];
                 // processedMessage = '';
@@ -732,8 +736,7 @@ export class ChatViewerComponent implements OnDestroy {
     }, 50);
   }
 
-  getOppositeUser(): string {
-    debugger
+  getOppositeUser(): string {    
     if (this.availableUsers.length === 2) {
       return this.availableUsers.find(u => u !== this.primaryUser) || 'Chat';
     }

@@ -10,7 +10,7 @@
   </button>
 
   <!-- Responsive Layout: Sidebar + Chat -->
-  <div class="w-full flex-1 flex flex-col md:flex-row gap-4 relative">
+  <div class="w-full flex-1 flex flex-col md:flex-row mt-2 gap-4 relative">
     <!-- Sidebar/User Section -->
     <div
       class="bg-white shadow-lg fixed top-0 left-0 h-full z-40 transition-transform duration-300 md:static md:block md:translate-x-0 md:rounded-lg"
@@ -303,11 +303,11 @@
                           <path d="M8 6h8M8 10h8M8 14h6" />
                         </svg>
                       </ng-container>
-                      <span class="text-base font-semibold text-gray-800 truncate max-w-[180px]">{{
+                      <span class="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{{
                         getPDFFileName(message.message) }}</span>
                     </div>
                     <div class="flex gap-2">
-                      <button (click)="previewFile(message.media, message.mediaType)"
+                      <button *ngIf="!message.mediaType?.startsWith('audio/')" (click)="previewFile(message.media, message.mediaType)"
                         class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">Preview</button>
                       <button (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
                         class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download</button>
