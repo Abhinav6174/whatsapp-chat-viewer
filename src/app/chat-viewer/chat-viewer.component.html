@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-100 flex flex-col items-center p-4">
-  <h1 class="text-2xl font-bold mb-4">WhatsApp Chat Viewer</h1>
+  <h1 class="sm:text-md md:text-lg lg:text-2xl font-bold mb-4">WhatsApp Chat Viewer</h1>
 
   <!-- Mobile Sidebar Toggle Button -->
   <button class="md:hidden fixed top-4 left-4 z-50 bg-green-700 text-white p-2 rounded shadow-lg focus:outline-none"
@@ -44,15 +44,30 @@
     </div>
 
     <!-- Chat Window -->
-    <div class="flex-1 w-full md:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="flex-1 w-full md:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden relative">
       <!-- Chat Header -->
-      <div class="bg-green-700 text-white p-4">
-        <h2 class="text-lg font-semibold">WhatsApp Chat</h2>
-        <p class="text-sm opacity-90" *ngIf="primaryUser">Viewing as: {{ primaryUser }}</p>
+      <div class="bg-green-700 text-white px-4 py-1 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-green-700 font-bold text-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2 20c0-2.21 3.58-4 8-4s8 1.79 8 4" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-md font-semibold">WhatsApp Chat</h2>
+            <p class="text-sm opacity-90" *ngIf="primaryUser">Viewing as: {{ primaryUser }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <i class="fa fa-video-camera text-lg sm:text-md cursor-pointer hover:text-green-300" title="Video Call"></i>
+          <i class="fa fa-phone text-lg sm:text-md cursor-pointer hover:text-green-300" title="Voice Call"></i>
+          <i class="fa fa-ellipsis-v text-lg sm:text-md cursor-pointer hover:text-green-300" title="More"></i>
+        </div>
       </div>
 
       <!-- Messages Container -->
-      <div class="h-[600px] overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-100">
+      <div class="overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-100" style="height:calc(600px - 64px); margin-bottom:56px;">
         <div *ngFor="let message of messages; let i = index">
           <!-- Date Separator -->
           <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
@@ -288,6 +303,16 @@
             </div>
           </div>
         </div>
+      </div>
+      <!-- WhatsApp-style Message Input Bar (inside chat window only) -->
+      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center px-2 py-2 gap-2 z-10" style="min-height:56px;">
+        <i class="fa-solid fa-face-smile text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Sticker"></i>
+        <input type="text" [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 px-3 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-green-700 text-sm bg-gray-50" />
+        <i class="fa fa-paperclip text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Attach"></i>
+        <i class="fa fa-camera text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Camera"></i>
+        <button (click)="sendMessage()" class="bg-green-700 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-green-800 transition-colors">
+          <i class="fa" [ngClass]="newMessage.trim() ? 'fa-paper-plane' : 'fa-microphone'" title="Send/Mic"></i>
+        </button>
       </div>
     </div>
   </div>

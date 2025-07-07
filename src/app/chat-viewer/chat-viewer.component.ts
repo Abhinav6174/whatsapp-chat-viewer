@@ -44,6 +44,9 @@ export class ChatViewerComponent implements OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
 
+  // WhatsApp-style message input
+  newMessage: string = '';
+
   // Responsive sidebar state
   sidebarOpen: boolean = false;
   isDesktop: boolean = false;
@@ -692,5 +695,22 @@ export class ChatViewerComponent implements OnDestroy {
 
   public objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
+  }
+
+  sendMessage(): void {
+    if (!this.newMessage.trim() || !this.primaryUser) return;
+    const now = new Date();
+    const formattedDate = this.formatDateForDisplay(now);
+    this.messages.push({
+      timestamp: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      sender: this.primaryUser,
+      message: this.newMessage,
+      date: formattedDate
+    });
+    this.newMessage = '';
+    setTimeout(() => {
+      const container = document.querySelector('.h-[600px].overflow-y-auto');
+      if (container) container.scrollTop = container.scrollHeight;
+    }, 50);
   }
 }
