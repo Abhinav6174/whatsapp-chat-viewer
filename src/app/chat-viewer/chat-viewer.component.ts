@@ -406,7 +406,7 @@ export class ChatViewerComponent implements OnDestroy {
           // Handle media messages
           if (actualMessage.includes('<Media omitted>')) {
             // For <Media omitted> messages, just show the text without trying to associate media files
-            processedMessage = '📎 Media omitted';
+            processedMessage = '📎 Media deleted';
           }
 
           // Handle file attachment messages
@@ -417,7 +417,7 @@ export class ChatViewerComponent implements OnDestroy {
             if (fileName.toLowerCase().includes('.webp')) {
               processedMessage = `😀 ${fileName.replace('.webp', '').replace('(file attached)', '').trim()}`;
             } else {
-              processedMessage = `📎 ${fileName}`;
+              processedMessage = ``;
             }
             
             // Try to find the actual file in mediaFiles or mediaFileData
@@ -460,7 +460,9 @@ export class ChatViewerComponent implements OnDestroy {
                 const onlyFileAttachment =
                   actualMessage.trim() === `${fileName} (file attached)` ||
                   actualMessage.trim() === `${fileName}` ||
-                  actualMessage.trim() === `📎 ${fileName}`;
+                  actualMessage.trim() === `📎 ${fileName}` ||
+                  actualMessage.trim().toLowerCase() === 'media omitted' ||
+                  actualMessage.trim().toLowerCase() === 'media deleted';
                 if (onlyFileAttachment) {
                   processedMessage = '';
                 }
@@ -468,10 +470,12 @@ export class ChatViewerComponent implements OnDestroy {
                 media = this.mediaFiles[mediaFileName];
               } else if (mediaType === 'application/pdf') {
                 media = this.mediaFiles[mediaFileName];
+                // processedMessage = '';
               } else if (mediaType === 'text/vcard') {
                 mediaData = this.mediaFileData[mediaFileName];
                 contactPreview = this.parseVCF(mediaData);
                 contactPreview.vcfDataUrl = this.mediaFiles[mediaFileName];
+                processedMessage = '';
               } else {
                 media = this.mediaFiles[mediaFileName];
               }

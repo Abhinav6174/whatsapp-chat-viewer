@@ -88,7 +88,7 @@
       </div>
 
       <!-- Messages Container -->
-      <div class="overflow-y-auto p-4 flex flex-col space-y-2 bg-gray-100" style="height:calc(600px - 64px); margin-bottom:56px;">
+      <div class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-gray-100 pb-[20px] sm:pb-16 md:pb-[60px]" style="height: 77vh;">
         <div *ngFor="let message of messages; let i = index">
           <!-- Date Separator -->
           <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
@@ -97,7 +97,7 @@
 
           <!-- System Messages -->
           <div *ngIf="message.sender === 'System'" class="text-center my-2">
-            <div class="inline-block bg-gray-200 text-gray-600 text-xs px-4 py-2 rounded-full max-w-[80%]">
+            <div class="inline-block bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-md max-w-[90%]">
               {{ message.message }}
             </div>
           </div>
@@ -106,7 +106,7 @@
           <div *ngIf="message.sender !== 'System'"
             class="flex {{ isPrimaryUser(message.sender) ? 'justify-end' : 'justify-start' }}">
             <div
-              class="w-full max-w-[90%] md:max-w-[80%] lg:max-w-[50%] flex {{ isPrimaryUser(message.sender) ? 'flex-row-reverse' : 'flex-row' }} items-start gap-2">
+              class="w-full max-w-[90%] md:max-w-[80%] lg:max-w-[50%] flex {{ isPrimaryUser(message.sender) ? 'flex-row-reverse' : 'flex-row' }} items-start gap-1">
               <!-- Avatar -->
               <div
                 class="w-8 h-8 rounded-full flex-shrink-0 {{ isPrimaryUser(message.sender) ? 'bg-green-700' : 'bg-gray-400' }} flex items-center justify-center text-white text-xs font-semibold">
@@ -116,7 +116,7 @@
               <!-- Message Bubble -->
               <div class="flex flex-col {{ isPrimaryUser(message.sender) ? 'items-end' : 'items-start' }}">
                 <div
-                  class="px-3 py-1 rounded-lg {{ isPrimaryUser(message.sender) ? 'bg-green-700 text-white' : 'bg-white text-gray-800' }} shadow-sm flex flex-col min-w-[80px]">
+                  class="px-2 py-2 rounded-lg {{ isPrimaryUser(message.sender) ? 'bg-green-700 text-white' : 'bg-white text-gray-800' }} shadow-sm flex flex-col min-w-[80px]">
                   <!-- Sender Name (top of bubble, only for other users) -->
                   <span *ngIf="!isPrimaryUser(message.sender)" class="text-xs font-semibold text-gray-500 mb-1">{{
                     message.sender }}</span>
@@ -132,10 +132,10 @@
                            [alt]="message.mediaType === 'image/webp' ? 'sticker' : 'media'"
                            [title]="message.mediaType === 'image/webp' ? 'Sticker: ' + getStickerName(message.message) : ''" />
                       <div class="flex-1 w-full flex flex-col items-center justify-center mt-1">
-                        <div class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{ message.message }}</div>
-                        <div class="flex justify-center w-full">
+                        <div *ngIf="message.message.length > 0 && !message.mediaType?.startsWith('image/')" class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{ message.message }}</div>
+                        <!-- <div class="flex justify-center w-full">
                           <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
-                        </div>
+                        </div> -->
                       </div>
                     </div>
                   </div>
@@ -314,7 +314,7 @@
                     </div>
                   </div>
                   <!-- Message Text -->
-                  <div class="text-sm whitespace-pre-wrap" style="word-break: break-word;">{{ message.message }}</div>
+                  <div *ngIf="message.mediaType !== 'application/pdf' && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/') && !message.mediaType?.startsWith('audio/')" class="text-sm whitespace-pre-wrap" style="word-break: break-word;">{{ message.message }}</div>
                   <!-- Bubble Footer: Timestamp (bottom right) -->
                   <div class="flex justify-end">
                     <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
@@ -332,7 +332,7 @@
         <i class="fa fa-paperclip text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Attach"></i>
         <i class="fa fa-camera text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Camera"></i>
         <button (click)="sendMessage()" class="bg-green-700 text-white rounded-full w-10 sm:w-8 h-10 sm:h-8 flex items-center justify-center hover:bg-green-800 transition-colors">
-          <i class="fa" [ngClass]="newMessage.trim() ? 'fa-paper-plane' : 'fa-microphone'" title="Send/Mic"></i>
+          <i class="text-lg sm:text-sm fa" [ngClass]="newMessage.trim() ? 'fa-paper-plane' : 'fa-microphone'" title="Send/Mic"></i>
         </button>
       </div>
     </div>
