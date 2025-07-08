@@ -104,18 +104,17 @@
           <div *ngIf="dropdownOpen"
             class="absolute z-10 mt-1 w-full bg-white border border-whats-gray1 rounded-lg shadow-lg max-h-60 overflow-auto">
             <div *ngFor="let user of availableUsers" (click)="onPrimaryUserChange(user)"
-              class="px-4 py-2 text-sm flex text-white items-center font-semibold gap-2 cursor-pointer transition-colors duration-150"
+              class="px-4 py-2 text-sm flex text-whats-dark2 items-center font-semibold gap-2 cursor-pointer transition-colors duration-150"
               [ngClass]="{
-                    'bg-whats-gray2 text-white': user === primaryUser,
-                    'hover:bg-whats-gray2 bg-whats-gray1 text-white': user !== primaryUser,
-                    'text-white': user !== primaryUser
+                    'bg-whats-light2 text-whats-dark2': user === primaryUser,
+                    'hover:bg-whats-light2 bg-whats-light2 text-whats-dark2': user !== primaryUser,
                   }">
               <!-- Dummy user icon -->
               <div
                 class="w-6 h-6 rounded-full bg-whats-dark1 text-white flex items-center justify-center text-xs font-bold">
                 {{ user.charAt(0).toUpperCase() }}
               </div>
-              <span class="text-white">{{ user }}</span>
+              <span class="text-whats-dark2">{{ user }}</span>
             </div>
             <div *ngIf="availableUsers.length === 0" class="px-4 py-2 text-sm text-whats-gray2 italic">
               No users found
