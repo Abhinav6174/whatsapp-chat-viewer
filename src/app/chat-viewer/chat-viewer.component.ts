@@ -84,6 +84,7 @@ export class ChatViewerComponent implements OnDestroy {
     window.addEventListener('resize', this.resizeListener);
     // Set the wallpaper to the default image on load
     this.wallpaperPreview = this.defaultWallpaper;
+    this.updatePrintWallpaper();
   }
 
   private updateIsDesktop() {
@@ -99,6 +100,11 @@ export class ChatViewerComponent implements OnDestroy {
     ) {
       this.dropdownOpen = false;
     }
+  }
+
+  @HostListener('window:beforeprint')
+  onBeforePrint() {
+    this.updatePrintWallpaper();
   }
 
   async onFileSelected(event: Event) {
@@ -809,9 +815,29 @@ export class ChatViewerComponent implements OnDestroy {
       this.wallpaperPreview = reader.result as string;
     };
     reader.readAsDataURL(file);
+    // After setting wallpaperPreview:
+    this.updatePrintWallpaper();
+  }
+
+  printChat() {
+    window.print();
   }
 
   resetWallpaper() {
-    this.wallpaperPreview = "";
+    this.wallpaperPreview = this.defaultWallpaper;
+    // After setting wallpaperPreview:
+    this.updatePrintWallpaper();
+  }
+
+  // Call this after wallpaper changes
+  private updatePrintWallpaper() {
+    setTimeout(() => {
+      const chatBg = document.querySelector('.chat-print-bg') as HTMLElement;
+      const url = this.wallpaperPreview ? `url('${this.wallpaperPreview}')` : 'none';
+      if (chatBg) {
+        chatBg.style.setProperty('--print-wallpaper-url', url);
+      }
+      document.body.style.setProperty('--print-wallpaper-url', url); // fallback for print
+    }, 0);
   }
 }

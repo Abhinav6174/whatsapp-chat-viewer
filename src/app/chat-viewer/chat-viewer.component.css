@@ -5,6 +5,12 @@
 }
 
 @media print {
+    body,
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
     #message-container {
         overflow: visible !important;
         height: auto !important;
@@ -18,5 +24,17 @@
     .lg\:h-chat-lg {
         height: auto !important;
         max-height: none !important;
+    }
+
+    .chat-print-bg {
+        background-image: var(--print-wallpaper-url, none) !important;
+        background-size: auto !important; /* No zoom, use natural size */
+        background-repeat: repeat !important;
+        background-position: top center !important;
+        /* background-size: cover !important; */ /* Commented out to prevent zoom */
+        /* min-height: 100vh; */
+        /* min-width: 100vw; */
+        /* box-shadow: none !important; */
+        /* border: none !important; */
     }
 }
