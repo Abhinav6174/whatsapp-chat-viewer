@@ -3,4 +3,34 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --primary: #25D366;
+    --dark1: #054640;
+    --dark2: #005d4b;
+    --dark3: #06625f;
+    --light: #DCF8C6;
+
+    --gray1: #bbbbbb;
+    --gray2: #aaaaaa;
+    --gray3: #3B4A54;
+    --gray4: #f0f0f0;
+
+    --bg: #e5ddd5;
+    --bg2: #f7f7f7;
+    --panel: #111b21;
+
+    --msgIn: #ffffff;
+    --msgOut: #dcf8c6;
+
+    --link: #34B7F1;
+    --success: #00e676;
+    --alert: #ff5252;
+}
+
 @import '@fortawesome/fontawesome-free/css/all.min.css';
+
+body{
+    font-family: "Lato", sans-serif;
+        font-optical-sizing: auto;
+            font-style: normal;
+}
