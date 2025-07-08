@@ -812,6 +812,6 @@ export class ChatViewerComponent implements OnDestroy {
   }
 
   resetWallpaper() {
-    this.wallpaperPreview = this.defaultWallpaper;
+    this.wallpaperPreview = "";
   }
 }
