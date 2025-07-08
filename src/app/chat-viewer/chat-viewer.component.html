@@ -2,7 +2,7 @@
   <h1 class="sm:text-md md:text-lg lg:text-2xl font-bold mb-4">WhatsApp Chat Viewer</h1>
 
   <!-- Mobile Sidebar Toggle Button -->
-  <button class="md:hidden fixed top-4 left-4 z-50 bg-green-700 text-white p-2 rounded shadow-lg focus:outline-none"
+  <button class="md:hidden fixed top-4 left-4 z-50 bg-whats-dark1 text-white p-2 rounded shadow-lg focus:outline-none"
     (click)="sidebarOpen = true" *ngIf="!sidebarOpen" aria-label="Open user menu">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -14,9 +14,11 @@
     <!-- Sidebar/User Section -->
     <div
       class="bg-white shadow-lg fixed top-0 left-0 h-full z-40 transition-transform duration-300 md:static md:block md:translate-x-0 md:rounded-lg"
-      [ngClass]="{'hidden': !sidebarOpen && !isDesktop, '-translate-x-full': !sidebarOpen && !isDesktop, 'w-3/4': !isDesktop, 'max-w-xs': !isDesktop, 'min-w-0': !isDesktop, 'p-4': !isDesktop, 'w-1/4': isDesktop, 'p-6': isDesktop}"
-      style="min-width:220px;max-width:350px;"
-    >
+      [ngClass]="{
+        'hidden -translate-x-full': !sidebarOpen && !isDesktop,
+        'w-3/4 max-w-xs min-w-0 p-4': !isDesktop,
+        'w-1/4 p-6': isDesktop
+      }" style="min-width:220px;max-width:350px;">
       <!-- Close button for mobile -->
       <button
         class="md:hidden absolute top-4 right-4 bg-gray-200 text-gray-700 rounded-full p-2 shadow focus:outline-none"
@@ -40,33 +42,86 @@
             <i class="fa fa-pencil"></i>
           </button>
         </div>
-        <div>
+        <!-- <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Upload Chat Export (.zip)</label>
           <input type="file" accept=".zip" (change)="onFileSelected($event)"
             class="w-full p-2 border rounded bg-white" />
+        </div> -->
+        <div class="mb-2">
+          <label class="block text-sm font-semibold text-whats-dark3 mb-2">
+            Upload Chat Export (.zip)
+          </label>
+          <div class="relative">
+            <input type="file" accept=".zip" (change)="onFileSelected($event)" class="w-full px-1 py-1 text-sm text-gray-800 border-2 border-whats-gray2 rounded-500 rounded-lg bg-white shadow-sm cursor-pointer
+                     file:mr-2 file:py-2 file:px-2 file:rounded-lg file:border-0
+                     file:text-sm file:font-semibold file:bg-whats-dark3 file:text-white
+                     hover:file:bg-whats-dark2 transition" />
+          </div>
         </div>
-        <div>
+
+        <!-- <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Select Primary User</label>
           <select [value]="primaryUser" (change)="onPrimaryUserChange($event)"
             class="w-full p-2 border rounded bg-white" [disabled]="availableUsers.length === 0">
             <option value="" disabled>Select a user...</option>
             <option *ngFor="let user of availableUsers" [value]="user">{{ user }}</option>
           </select>
+        </div> -->
+
+        <div class="mb-4 relative" #dropdownWrapper>
+          <label class="block text-sm font-semibold text-whats-dark3 mb-2">
+            View Chat As
+          </label>
+        
+          <!-- Trigger -->
+          <div (click)="dropdownOpen = !dropdownOpen" tabindex="0"
+            class="w-full px-4 py-2 text-sm text-gray-800 border-2 border-whats-gray2 bg-white rounded-lg shadow-sm cursor-pointer flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-whats-dark3 focus:ring-opacity-500">
+            <span>
+              {{ primaryUser || 'Select a user...' }}
+            </span>
+            <svg class="w-4 h-4 text-whats-dark3 transform transition-transform duration-200" [class.rotate-180]="dropdownOpen"
+              fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.293l3.71-4.06a.75.75 0 111.08 1.04l-4.25 4.65a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                clip-rule="evenodd" />
+            </svg>
+          </div>
+        
+          <!-- Dropdown -->
+          <div *ngIf="dropdownOpen"
+            class="absolute z-10 mt-1 w-full bg-white border border-whats-gray1 rounded-lg shadow-lg max-h-60 overflow-auto">
+            <div *ngFor="let user of availableUsers" (click)="onPrimaryUserChange(user)"
+              class="px-4 py-2 text-sm flex items-center gap-2 cursor-pointer transition-colors duration-150 rounded-md" [ngClass]="{
+                    'bg-whats-dark3 text-white': user === primaryUser,
+                    'hover:bg-whats-dark2 hover:text-white': user !== primaryUser,
+                    'text-whats-dark3': user !== primaryUser
+                  }">
+              <!-- Dummy user icon -->
+              <div class="w-6 h-6 rounded-full bg-whats-dark1 text-white flex items-center justify-center text-xs font-bold">
+                {{ user.charAt(0).toUpperCase() }}
+              </div>
+              <span>{{ user }}</span>
+            </div>
+            <div *ngIf="availableUsers.length === 0" class="px-4 py-2 text-sm text-whats-gray2 italic">
+              No users found
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
 
     <!-- Chat Window -->
     <div class="flex-1 w-full md:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden relative">
       <!-- Chat Header -->
-      <div class="bg-green-700 text-white px-4 py-2 flex items-center justify-between">
+      <div class="bg-whats-dark2 text-white px-4 py-2 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-green-700 font-bold text-md sm:text-sm">
             <!-- <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M2 20c0-2.21 3.58-4 8-4s8 1.79 8 4" />
             </svg> -->
-            <span *ngIf="availableUsers.length === 2"><i class="fa-solid fa-user text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
+            <span *ngIf="availableUsers.length === 2 || availableUsers.length === 1"><i class="fa-solid fa-user text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
             <span *ngIf="availableUsers.length > 2"><i class="fa-solid fa-users text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
           </div>
           <div>
@@ -78,6 +133,9 @@
             <ng-container *ngIf="availableUsers.length > 2">
               <h2 class="text-md font-semibold">{{ groupName }}</h2>
             </ng-container>
+            <ng-container *ngIf="availableUsers.length === 0">
+              <h2 class="text-md font-semibold">Whatsapp Chat</h2>
+            </ng-container>
           </div>
         </div>
         <div class="flex items-center gap-6">
@@ -88,7 +146,14 @@
       </div>
 
       <!-- Messages Container -->
-      <div class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-gray-100 pb-[50px] sm:pb-16 md:pb-[60px] h-chat-sm md:chat-md lg:h-chat-lg">
+      <div id="message-container" class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-gray-100 pb-[50px] sm:pb-16 md:pb-[60px] h-chat-sm md:chat-md lg:h-chat-lg">
+        <ng-container>
+          <!-- No Messages Placeholder -->
+          <div *ngIf="messages.length === 0" class="text-center text-gray-500 mt-10">
+            <p class="text-lg font-semibold">No messages found.</p>
+            <p class="text-sm">Please upload a chat export to view messages.</p>
+          </div>
+        </ng-container>
         <div *ngFor="let message of messages; let i = index">
           <!-- Date Separator -->
           <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">

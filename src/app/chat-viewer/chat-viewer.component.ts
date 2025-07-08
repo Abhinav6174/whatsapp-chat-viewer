@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import JSZip from 'jszip';
 import { format, isToday, isYesterday } from 'date-fns';
 import { DisplayItem, Message, MediaMessage, DaySeparator } from '../models/chat.model';
@@ -59,6 +59,8 @@ export class ChatViewerComponent implements OnDestroy {
   sidebarOpen: boolean = false;
   isDesktop: boolean = false;
   private resizeListener: (() => void) | null = null;
+  dropdownOpen = false;
+  @ViewChild('dropdownWrapper') dropdownWrapper!: ElementRef;
 
   constructor() {
     this.updateIsDesktop();
@@ -77,6 +79,17 @@ export class ChatViewerComponent implements OnDestroy {
 
   private updateIsDesktop() {
     this.isDesktop = window.matchMedia('(min-width: 768px)').matches;
+  }
+
+  // Close when clicking outside
+  @HostListener('document:click', ['$event'])
+  handleClickOutside(event: Event) {
+    if (
+      this.dropdownWrapper &&
+      !this.dropdownWrapper.nativeElement.contains(event.target)
+    ) {
+      this.dropdownOpen = false;
+    }
   }
 
   async onFileSelected(event: Event) {
@@ -267,9 +280,10 @@ export class ChatViewerComponent implements OnDestroy {
     return text.includes('BEGIN:VCARD');
   }
 
-  onPrimaryUserChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.primaryUser = select.value;
+  onPrimaryUserChange(user: any) {
+    // const select = event.target as HTMLSelectElement;
+    this.primaryUser = user;
+    this.dropdownOpen = false;
   }
 
   isPrimaryUser(sender: string): boolean {
@@ -741,7 +755,7 @@ export class ChatViewerComponent implements OnDestroy {
     });
     this.newMessage = '';
     setTimeout(() => {
-      const container = document.querySelector('.h-[600px].overflow-y-auto');
+      const container = document.getElementById('message-container');
       if (container) container.scrollTop = container.scrollHeight;
     }, 50);
   }
