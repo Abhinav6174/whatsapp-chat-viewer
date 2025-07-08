@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-100 flex flex-col items-center p-4">
-  <h1 class="sm:text-md md:text-lg lg:text-2xl font-bold mb-4 heading">WhatsApp Chat Viewer</h1>
+  <h1 class="sm:text-md md:text-lg lg:text-2xl font-bold mb-4">WhatsApp Chat Viewer</h1>
 
   <!-- Mobile Sidebar Toggle Button -->
   <button class="md:hidden fixed top-4 left-4 z-50 bg-whats-dark1 text-white p-2 rounded shadow-lg focus:outline-none"
@@ -30,15 +30,15 @@
       <!-- File Upload and User Selection -->
       <div class="flex flex-col gap-6 mt-10 md:mt-0">
         <!-- Editable group name for group chats -->
-        <div *ngIf="availableUsers.length > 2" class="flex items-center gap-2 mb-2">
-          <input
-            [(ngModel)]="groupName"
-            #groupNameInputSidebar
+        <label class="block text-sm font-semibold text-whats-dark3">
+          Change Group Name
+        </label>
+        <div *ngIf="availableUsers.length > 2" class="flex items-center gap-2 mb-2 -mt-5">
+          <input [(ngModel)]="groupName" #groupNameInputSidebar
             class="text-md font-semibold bg-transparent text-gray-800 border-b border-gray-300 focus:outline-none px-2 py-1 rounded w-auto max-w-[200px]"
-            [readonly]="!editingGroupName"
-            (blur)="editingGroupName = false"
-          />
-          <button type="button" class="text-gray-600 hover:text-green-700" (click)="startEditingGroupName(groupNameInputSidebar)">
+            [readonly]="!editingGroupName" (blur)="editingGroupName = false" />
+          <button type="button" class="text-gray-600 hover:text-green-700"
+            (click)="startEditingGroupName(groupNameInputSidebar)">
             <i class="fa fa-pencil"></i>
           </button>
         </div>
@@ -58,6 +58,19 @@
                      hover:file:bg-whats-dark2 transition" />
           </div>
         </div>
+        <!-- Wallpaper Upload Section -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-whats-dark3 mb-2">
+            Chat Wallpaper
+          </label>
+          <div class="relative">
+            <input type="file" accept="image/*" (change)="onWallpaperSelected($event)" class="w-full px-1 py-1 text-sm text-gray-800 border-2 border-whats-gray2 rounded-500 rounded-lg bg-white shadow-sm cursor-pointer
+                     file:mr-2 file:py-2 file:px-2 file:rounded-lg file:border-0
+                     file:text-sm file:font-semibold file:bg-whats-dark3 file:text-white
+                     hover:file:bg-whats-dark2 transition" />
+            <!-- <button type="button" (click)="resetWallpaper()" class="bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 text-xs">Default</button> -->
+          </div>
+        </div>
 
         <!-- <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Select Primary User</label>
@@ -72,35 +85,37 @@
           <label class="block text-sm font-semibold text-whats-dark3 mb-2">
             View Chat As
           </label>
-        
+
           <!-- Trigger -->
           <div (click)="dropdownOpen = !dropdownOpen" tabindex="0"
             class="w-full px-4 py-2 text-sm text-gray-800 border-2 border-whats-gray2 bg-white rounded-lg shadow-sm cursor-pointer flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-whats-dark3 focus:ring-opacity-500">
             <span>
               {{ primaryUser || 'Select a user...' }}
             </span>
-            <svg class="w-4 h-4 text-whats-dark3 transform transition-transform duration-200" [class.rotate-180]="dropdownOpen"
-              fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-4 h-4 text-whats-dark3 transform transition-transform duration-200"
+              [class.rotate-180]="dropdownOpen" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd"
                 d="M5.23 7.21a.75.75 0 011.06.02L10 11.293l3.71-4.06a.75.75 0 111.08 1.04l-4.25 4.65a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
                 clip-rule="evenodd" />
             </svg>
           </div>
-        
+
           <!-- Dropdown -->
           <div *ngIf="dropdownOpen"
             class="absolute z-10 mt-1 w-full bg-white border border-whats-gray1 rounded-lg shadow-lg max-h-60 overflow-auto">
             <div *ngFor="let user of availableUsers" (click)="onPrimaryUserChange(user)"
-              class="px-4 py-2 text-sm flex items-center gap-2 cursor-pointer transition-colors duration-150 rounded-md" [ngClass]="{
-                    'bg-whats-dark3 text-white': user === primaryUser,
-                    'hover:bg-whats-dark2 hover:text-white': user !== primaryUser,
-                    'text-whats-dark3': user !== primaryUser
+              class="px-4 py-2 text-sm flex text-white items-center font-semibold gap-2 cursor-pointer transition-colors duration-150"
+              [ngClass]="{
+                    'bg-whats-gray2 text-white': user === primaryUser,
+                    'hover:bg-whats-gray2 bg-whats-gray1 text-white': user !== primaryUser,
+                    'text-white': user !== primaryUser
                   }">
               <!-- Dummy user icon -->
-              <div class="w-6 h-6 rounded-full bg-whats-dark1 text-white flex items-center justify-center text-xs font-bold">
+              <div
+                class="w-6 h-6 rounded-full bg-whats-dark1 text-white flex items-center justify-center text-xs font-bold">
                 {{ user.charAt(0).toUpperCase() }}
               </div>
-              <span>{{ user }}</span>
+              <span class="text-white">{{ user }}</span>
             </div>
             <div *ngIf="availableUsers.length === 0" class="px-4 py-2 text-sm text-whats-gray2 italic">
               No users found
@@ -112,17 +127,26 @@
     </div>
 
     <!-- Chat Window -->
-    <div class="flex-1 w-full md:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden relative">
+    <div class="flex-1 w-full md:w-3/4 rounded-lg shadow-lg overflow-hidden relative" [ngStyle]="{
+    'background-image': wallpaperPreview ? 'url(' + wallpaperPreview + ')' : 'none',
+    'background-size': 'cover',
+    'background-repeat': 'no-repeat',
+    'background-position': 'center',
+    'background-color': wallpaperPreview ? 'transparent' : '#fff'
+  }">
       <!-- Chat Header -->
       <div class="bg-whats-dark2 text-white px-4 py-2 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-green-700 font-bold text-md sm:text-sm">
+          <div
+            class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-green-700 font-bold text-md sm:text-sm">
             <!-- <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M2 20c0-2.21 3.58-4 8-4s8 1.79 8 4" />
             </svg> -->
-            <span *ngIf="availableUsers.length === 2 || availableUsers.length === 1"><i class="fa-solid fa-user text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
-            <span *ngIf="availableUsers.length > 2"><i class="fa-solid fa-users text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
+            <span *ngIf="availableUsers.length === 2 || availableUsers.length === 1"><i
+                class="fa-solid fa-user text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
+            <span *ngIf="availableUsers.length > 2"><i
+                class="fa-solid fa-users text-md sm:text-sm cursor-pointer hover:text-green-300"></i></span>
           </div>
           <div>
             <ng-container *ngIf="availableUsers.length === 2">
@@ -146,7 +170,9 @@
       </div>
 
       <!-- Messages Container -->
-      <div id="message-container" class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 bg-whats-bg pb-[50px] sm:pb-16 md:pb-[60px] h-chat-sm md:chat-md lg:h-chat-lg">
+      <div id="message-container"
+        class="overflow-y-auto px-2 py-4 flex flex-col space-y-2 pb-[50px] sm:pb-16 md:pb-[60px] h-chat-sm md:chat-md lg:h-chat-lg"
+        style="background: transparent;">
         <ng-container>
           <!-- No Messages Placeholder -->
           <div *ngIf="messages.length === 0" class="text-center text-gray-500 mt-10">
@@ -157,12 +183,12 @@
         <div *ngFor="let message of messages; let i = index">
           <!-- Date Separator -->
           <div *ngIf="i === 0 || message.date !== messages[i-1].date" class="text-center text-xs text-gray-500 my-4">
-            <span class="bg-gray-200 px-3 py-1 rounded-full">{{ message.date }}</span>
+            <span class="bg-white px-3 py-1 rounded-full">{{ message.date }}</span>
           </div>
 
           <!-- System Messages -->
           <div *ngIf="message.sender === 'System'" class="text-center my-2">
-            <div class="inline-block bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-md max-w-[90%]">
+            <div class="inline-block bg-whats-sysMsg text-gray-600 text-xs px-2 py-1 rounded-md max-w-[90%]">
               {{ message.message }}
             </div>
           </div>
@@ -175,7 +201,8 @@
               <!-- Avatar -->
               <div
                 class="w-8 h-8 rounded-full flex-shrink-0 {{ isPrimaryUser(message.sender) ? 'bg-green-700' : 'bg-gray-400' }} flex items-center justify-center text-white text-xs font-semibold">
-                {{ message.sender.charAt(0).toUpperCase() }}
+                <!-- {{ message.sender.charAt(0).toUpperCase() }} -->
+                <i class="fa-solid fa-user text-md sm:text-sm cursor-pointer"></i>
               </div>
 
               <!-- Message Bubble -->
@@ -187,17 +214,18 @@
                     message.sender }}</span>
                   <!-- Media Content -->
                   <div *ngIf="message.media && message.mediaType?.startsWith('image/')" class="mb-2">
-                    <div class="overflow-hidden rounded-lg shadow-sm flex flex-col items-center"
-                         [ngClass]="{
+                    <div class="overflow-hidden rounded-lg shadow-sm flex flex-col items-center" [ngClass]="{
                            'w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56': message.mediaType !== 'image/webp',
                            'w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48': message.mediaType === 'image/webp'
                          }">
-                      <img [src]="message.media"
-                           class="object-cover w-full h-full"
-                           [alt]="message.mediaType === 'image/webp' ? 'sticker' : 'media'"
-                           [title]="message.mediaType === 'image/webp' ? 'Sticker: ' + getStickerName(message.message) : ''" />
+                      <img [src]="message.media" class="object-cover w-full h-full"
+                        [alt]="message.mediaType === 'image/webp' ? 'sticker' : 'media'"
+                        [title]="message.mediaType === 'image/webp' ? 'Sticker: ' + getStickerName(message.message) : ''" />
                       <div class="flex-1 w-full flex flex-col items-center justify-center mt-1">
-                        <div *ngIf="message.message.length > 0 && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')" class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{ message.message }}</div>
+                        <div
+                          *ngIf="message.message.length > 0 && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')"
+                          class="text-sm whitespace-pre-wrap text-center w-full" style="word-break: break-word;">{{
+                          message.message }}</div>
                         <!-- <div class="flex justify-center w-full">
                           <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
                         </div> -->
@@ -212,9 +240,10 @@
                     class="flex items-center justify-between bg-gray-100 border border-gray-300 rounded-lg px-2 mb-2 shadow-sm">
                     <!-- Audio Player -->
                     <audio [src]="message.media" controls class="max-w-[100%] h-12 focus:outline-none"></audio>
-                  
+
                     <!-- Download Icon -->
-                    <a [href]="message.media" download class="text-blue-600 hover:text-blue-800 transition" title="Download audio">
+                    <a [href]="message.media" download class="text-blue-600 hover:text-blue-800 transition"
+                      title="Download audio">
                       <i class="fas fa-download text-lg sm:text-md"></i>
                     </a>
                   </div>
@@ -346,7 +375,8 @@
                     </details>
                   </div>
                   <!-- File Card for non-image files -->
-                  <div *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')"
+                  <div
+                    *ngIf="message.media && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('audio/')"
                     class="mb-2 bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
                     <div class="flex items-center gap-2 mb-1">
                       <ng-container [ngSwitch]="true">
@@ -378,13 +408,16 @@
                           </svg>
                         </ng-container>
                       </ng-container>
-                      <span *ngIf="!message.mediaType?.startsWith('audio/')" class="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{{
+                      <span *ngIf="!message.mediaType?.startsWith('audio/')"
+                        class="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{{
                         getPDFFileName(message.message) }}</span>
                     </div>
                     <div class="flex gap-2">
-                      <button *ngIf="!message.mediaType?.startsWith('audio/')" (click)="previewFile(message.media, message.mediaType)"
+                      <button *ngIf="!message.mediaType?.startsWith('audio/')"
+                        (click)="previewFile(message.media, message.mediaType)"
                         class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">Preview</button>
-                      <button *ngIf="!message.mediaType?.startsWith('audio/')" (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
+                      <button *ngIf="!message.mediaType?.startsWith('audio/')"
+                        (click)="downloadFile(message.media, getPDFFileName(message.message), message.mediaType)"
                         class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Download</button>
                       <!-- Add play/download for audio files -->
                       <!-- <ng-container *ngIf="message.mediaType?.startsWith('audio/')">
@@ -395,10 +428,24 @@
                     </div>
                   </div>
                   <!-- Message Text -->
-                  <div *ngIf="message.mediaType !== 'application/pdf' && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/') && !message.mediaType?.startsWith('audio/')" class="text-sm whitespace-pre-wrap" style="word-break: break-word;">{{ message.message }}</div>
+                  <div
+                    *ngIf="message.mediaType !== 'application/pdf' && !message.mediaType?.startsWith('image/') && !message.mediaType?.startsWith('video/') && !message.mediaType?.startsWith('audio/')"
+                    class="text-sm whitespace-pre-wrap" style="word-break: break-word;">{{ message.message }}</div>
                   <!-- Bubble Footer: Timestamp (bottom right) -->
-                  <div class="flex justify-end">
+                  <!-- <div class="flex justify-end">
                     <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
+                  </div> -->
+                  <div class="flex justify-end items-center gap-1">
+                    <span class="text-xs text-gray-400">{{ message.timestamp }}</span>
+                    <ng-container *ngIf="isPrimaryUser(message.sender)">
+                      <svg viewBox="0 0 16 11" height="11" width="16" preserveAspectRatio="xMidYMid meet" class="text-blue-500" fill="none">
+                        <title>msg-dblcheck</title>
+                        <path
+                          d="M11.0714 0.652832C10.991 0.585124 10.8894 0.55127 10.7667 0.55127C10.6186 0.55127 10.4916 0.610514 10.3858 0.729004L4.19688 8.36523L1.79112 6.09277C1.7488 6.04622 1.69802 6.01025 1.63877 5.98486C1.57953 5.95947 1.51817 5.94678 1.45469 5.94678C1.32351 5.94678 1.20925 5.99544 1.11192 6.09277L0.800883 6.40381C0.707784 6.49268 0.661235 6.60482 0.661235 6.74023C0.661235 6.87565 0.707784 6.98991 0.800883 7.08301L3.79698 10.0791C3.94509 10.2145 4.11224 10.2822 4.29844 10.2822C4.40424 10.2822 4.5058 10.259 4.60313 10.2124C4.70046 10.1659 4.78086 10.1003 4.84434 10.0156L11.4903 1.59863C11.5623 1.5013 11.5982 1.40186 11.5982 1.30029C11.5982 1.14372 11.5348 1.01888 11.4078 0.925781L11.0714 0.652832ZM8.6212 8.32715C8.43077 8.20866 8.2488 8.09017 8.0753 7.97168C7.99489 7.89128 7.8891 7.85107 7.75791 7.85107C7.6098 7.85107 7.4892 7.90397 7.3961 8.00977L7.10411 8.33984C7.01947 8.43717 6.97715 8.54508 6.97715 8.66357C6.97715 8.79476 7.0237 8.90902 7.1168 9.00635L8.1959 10.0791C8.33132 10.2145 8.49636 10.2822 8.69102 10.2822C8.79681 10.2822 8.89838 10.259 8.99571 10.2124C9.09304 10.1659 9.17556 10.1003 9.24327 10.0156L15.8639 1.62402C15.9358 1.53939 15.9718 1.43994 15.9718 1.32568C15.9718 1.1818 15.9125 1.05697 15.794 0.951172L15.4386 0.678223C15.3582 0.610514 15.2587 0.57666 15.1402 0.57666C14.9964 0.57666 14.8715 0.635905 14.7657 0.754395L8.6212 8.32715Z"
+                          fill="currentColor"></path>
+                      </svg>
+                    </ng-container>
+                    
                   </div>
                 </div>
               </div>
@@ -407,13 +454,20 @@
         </div>
       </div>
       <!-- WhatsApp-style Message Input Bar (inside chat window only) -->
-      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center px-2 py-2 gap-2 z-10" style="min-height:56px;">
-        <i class="fa-solid fa-face-smile text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Sticker"></i>
-        <input type="text" [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" placeholder="Type a message" class="flex-1 px-3 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-green-700 text-sm bg-gray-50" />
-        <i class="fa fa-paperclip text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Attach"></i>
+      <div
+        class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex items-center px-2 py-2 gap-2 z-10"
+        style="min-height:56px;">
+        <i class="fa-solid fa-face-smile text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700"
+          title="Sticker"></i>
+        <input type="text" [(ngModel)]="newMessage" (keydown.enter)="sendMessage()" placeholder="Type a message"
+          class="flex-1 px-3 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-green-700 text-sm bg-gray-50" />
+        <i class="fa fa-paperclip text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700"
+          title="Attach"></i>
         <i class="fa fa-camera text-lg sm:text-md text-gray-500 cursor-pointer hover:text-green-700" title="Camera"></i>
-        <button (click)="sendMessage()" class="bg-green-700 text-white rounded-full w-10 sm:w-8 h-10 sm:h-8 flex items-center justify-center hover:bg-green-800 transition-colors">
-          <i class="text-lg sm:text-sm fa" [ngClass]="newMessage.trim() ? 'fa-paper-plane' : 'fa-microphone'" title="Send/Mic"></i>
+        <button (click)="sendMessage()"
+          class="bg-green-700 text-white rounded-full w-10 sm:w-8 h-10 sm:h-8 flex items-center justify-center hover:bg-green-800 transition-colors">
+          <i class="text-lg sm:text-sm fa" [ngClass]="newMessage.trim() ? 'fa-paper-plane' : 'fa-microphone'"
+            title="Send/Mic"></i>
         </button>
       </div>
     </div>

@@ -16,6 +16,7 @@ module.exports = {
           dark2: "#005d4b", // Button hover
           dark3: "#06625f", // Border / accent
           light: "#DCF8C6", // Incoming chat bubble
+          light2: "#F0F2F5", // Light background
 
           // Grays
           gray1: "#bbbbbb", // Border / subtle text
@@ -31,6 +32,7 @@ module.exports = {
           // Messages
           msgIn: "#ffffff", // Received message bubble
           msgOut: "#dcf8c6", // Sent message bubble
+          sysMsg: "#FFEECD", // System messages
 
           // Status/Links
           link: "#34B7F1", // Links or clickable text

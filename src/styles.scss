@@ -29,8 +29,25 @@
 
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
-body{
+body {
     font-family: "Lato", sans-serif;
-        font-optical-sizing: auto;
-            font-style: normal;
+    font-optical-sizing: auto;
+    // font-style: normal;
+    scrollbar-width: thin;
+    scrollbar-color: #999 #f0f0f0;
+}
+
+/* Chrome, Edge, Safari (WebKit-based) */
+body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: #999;
+    border-radius: 4px;
 }
