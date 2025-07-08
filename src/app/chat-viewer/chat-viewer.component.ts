@@ -831,7 +831,12 @@ export class ChatViewerComponent implements OnDestroy {
   }
 
   printChat() {
-    window.print();
+    this.updatePrintWallpaper();
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+      }, 0);
+    });
   }
 
   resetWallpaper() {
