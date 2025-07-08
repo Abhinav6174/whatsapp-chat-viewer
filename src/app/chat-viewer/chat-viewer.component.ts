@@ -346,6 +346,9 @@ export class ChatViewerComponent implements OnDestroy {
       const trimmedLine = line.trim();
       if (!trimmedLine) continue;
 
+      // Extensive logging for debugging
+      // console.log('Processing line:', trimmedLine);
+
       // Try to match regular message format
       let match = trimmedLine.match(messageRegex);
       let isSystemMessage = false;
@@ -547,6 +550,14 @@ export class ChatViewerComponent implements OnDestroy {
         currentMessage.message += '\n' + trimmedLine;
       }
     }
+
+    // Log final processed messages for debugging
+    // console.log('Processed Messages:', messages.map(m => ({
+    //   sender: m.sender,
+    //   message: m.message,
+    //   media: !!m.media,
+    //   mediaType: m.mediaType
+    // })));
 
     this.messages = messages;
     
